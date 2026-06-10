@@ -1,0 +1,227 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+   <meta charset="UTF-8"> 
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+   <title>ASCENSION: System Protocol</title> 
+   <style> 
+     :root { --bg-color: #050608; --card-bg: #0f131a; --border-red: #8b1e22; --accent-red: #e62329; --text-gold: #dfb755; --text-muted: #7c8691; --glow-red: rgba(230, 35, 41, 0.3); } 
+     body { margin: 0; padding: 0; background-color: var(--bg-color); color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; box-sizing: border-box; padding-bottom: 100px; } 
+     #auth-screen, #setup-screen, #app-screen { display: none; width: 100%; max-width: 450px; padding: 20px; box-sizing: border-box; } 
+     .system-notif { color: var(--text-muted); font-size: 0.8rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; text-align: center; } 
+     .story-banner { background: rgba(139, 30, 34, 0.15); border-left: 3px solid var(--accent-red); padding: 12px; margin-bottom: 20px; font-size: 0.85rem; line-height: 1.4; color: #e2e8f0; font-style: italic; }
+     .main-title { font-size: 3.2rem; font-weight: 900; letter-spacing: 3px; color: #ffffff; margin: 0; text-transform: uppercase; text-align: center; background: linear-gradient(180deg, #ffffff 40%, #8b1e22 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; } 
+     .btn-action { background: var(--border-red); color: #fff; border: 1px solid var(--accent-red); padding: 16px 20px; font-size: 1rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; border-radius: 4px; box-shadow: 0 0 15px var(--glow-red); width: 100%; box-sizing: border-box; margin-bottom: 10px; } 
+     .btn-secondary { background: #0f131a; border: 1px solid #1c2533; color: var(--text-muted); padding: 8px 12px; font-size: 0.7rem; cursor: pointer; text-transform: uppercase; border-radius: 2px; } 
+     .app-header { width: 100%; display: flex; justify-content: center; align-items: center; border-bottom: 1px solid #1a1f26; padding-bottom: 12px; margin-bottom: 20px; } 
+     .brand-logo { font-size: 1.1rem; font-weight: bold; letter-spacing: 2px; } 
+     .brand-logo span { color: var(--accent-red); border: 1px solid var(--border-red); padding: 2px 6px; margin-right: 5px; } 
+     .avatar-wrapper { display: flex; justify-content: center; margin-bottom: 20px; } 
+     .profile-avatar-frame { width: 140px; height: 140px; border: 2px solid var(--border-red); background: #070a0f; box-shadow: 0 0 15px var(--glow-red); overflow: hidden; display: flex; align-items: center; justify-content: center; } 
+     .profile-avatar-frame img { width: 100%; height: 100%; object-fit: cover; } 
+     .main-display-name { font-size: 2.2rem; text-transform: uppercase; text-align: center; margin: 5px 0; } 
+     .rank-title { font-size: 1.2rem; color: var(--text-gold); text-align: center; margin-bottom: 5px; } 
+     .xp-numeric { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 15px; font-family: monospace; }
+     .stat-row-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; } 
+     .stat-box { background: #070a0f; border: 1px solid #141921; padding: 12px; text-align: center; } 
+     .stat-box-val { font-size: 1.8rem; font-weight: bold; color: #fff; } 
+     .stat-box-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; } 
+     .xp-container { width: 100%; background: #070a0e; height: 8px; margin-bottom: 5px; } 
+     .xp-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--border-red), var(--accent-red)); transition: width 0.3s ease; } 
+     .nav-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; background: #090d12; border-top: 1px solid #1c232e; display: flex; justify-content: space-around; padding: 12px 0; z-index: 100; } 
+     .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; cursor: pointer; } 
+     .nav-btn.active { color: var(--accent-red); } 
+     .tab-content { display: none; } .tab-content.active { display: block; } 
+     .system-panel { background: var(--card-bg); border: 1px solid #1a222d; padding: 20px; } 
+     .trial-card { background: var(--card-bg); border: 1px solid #1a222d; padding: 20px; margin-bottom: 15px; } 
+     .trial-card h4 { margin: 0 0 5px 0; color: var(--text-gold); text-transform: uppercase; letter-spacing: 1px; }
+     .trial-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; line-height: 1.3; }
+     .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #161d26; } 
+     .metric-label { color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; } 
+     .metric-val { color: var(--text-gold); font-weight: bold; font-size: 1rem; } 
+     .history-item { font-size: 0.85rem; padding: 6px 0; border-bottom: 1px solid #141921; color: #fff; } 
+   </style> 
+</head> 
+<body> 
+
+   <div id="auth-screen" style="display: block;"> 
+     <h1 class="main-title">AWAKEN</h1> 
+     <button class="btn-action" onclick="goToAccountSetup()">INITIALIZE SYNC</button> 
+   </div> 
+
+   <div id="setup-screen"> 
+     <h2>Forge Profile</h2> 
+     <input type="text" id="input-name" class="btn-secondary" style="width:100%; margin-bottom:10px; padding:15px; font-size:1rem;" value="User"> 
+     <button class="btn-action" onclick="finalizeAccountCreation()">AWAKEN VESSEL</button> 
+   </div> 
+
+   <div id="app-screen"> 
+     <header class="app-header"> 
+       <div class="brand-logo"><span>E</span> ASCENSION</div> 
+     </header> 
+
+     <div id="frame-profile" class="tab-content active"> 
+       <div class="system-panel"> 
+         <div class="avatar-wrapper"><div class="profile-avatar-frame" id="final-profile-avatar"></div></div> 
+         <div class="main-display-name" id="display-name"></div> 
+         <div id="display-power-level" class="rank-title">POWER LEVEL 0</div> 
+         <div class="xp-container"><div class="xp-bar" id="profile-xp-bar"></div></div> 
+         <div id="display-xp-text" class="xp-numeric">0 / 100 XP</div> 
+         <div class="stat-row-grid"> 
+           <div class="stat-box"><div class="stat-box-val" id="stat-str">7</div><div class="stat-box-label">Strength</div></div> 
+           <div class="stat-box"><div class="stat-box-val" id="stat-agi">5</div><div class="stat-box-label">Agility</div></div> 
+           <div class="stat-box"><div class="stat-box-val" id="stat-sta">5</div><div class="stat-box-label">Stamina</div></div> 
+         </div> 
+       </div> 
+     </div> 
+
+     <div id="frame-quests" class="tab-content"> 
+       <div class="system-panel"> 
+         <div class="system-notif" id="trial-tier-display">[ TIER 1 PROTOCOL ]</div> 
+         <div class="story-banner" id="story-banner-text">Synchronizing...</div>
+         <div id="quest-container"></div> 
+       </div> 
+     </div> 
+
+     <div id="frame-library" class="tab-content"> 
+       <div class="system-panel"> <h3>Chronicle Ledger</h3> <div id="history-container"></div> </div> 
+     </div> 
+
+     <div id="frame-log" class="tab-content"> 
+       <div class="system-panel"> <h3>Accumulation Matrix</h3> 
+         <div class="metric-row"><span class="metric-label">Push-Ups</span><span class="metric-val" id="log-pushups">0</span></div> 
+         <div class="metric-row"><span class="metric-label">Pull-Ups</span><span class="metric-val" id="log-pullups">0</span></div> 
+         <div class="metric-row"><span class="metric-label">Sit-Ups</span><span class="metric-val" id="log-situps">0</span></div> 
+         <div class="metric-row"><span class="metric-label">Plank</span><span class="metric-val" id="log-plank">0s</span></div> 
+         <div class="metric-row"><span class="metric-label">Walk/Jog</span><span class="metric-val" id="log-cardio">0m</span></div> 
+         <div style="margin-top:30px; text-align:center;">
+            <button class="btn-secondary" onclick="wipeSystemData()">PURGE ALL DATA</button>
+         </div>
+       </div> 
+     </div> 
+
+     <nav class="nav-bar"> 
+       <button class="nav-btn" onclick="switchActiveTab('quests', this)">🧭<br>Quests</button> 
+       <button class="nav-btn active" onclick="switchActiveTab('profile', this)">👤<br>Profile</button> 
+       <button class="nav-btn" onclick="switchActiveTab('library', this)">🏋️‍♂️<br>Library</button> 
+       <button class="nav-btn" onclick="switchActiveTab('log', this)">📜<br>Log</button> 
+     </nav> 
+   </div> 
+
+ <script> 
+ const profileTierImages = [ "https://i.postimg.cc/QMkPSmbV/level-1.png", "https://i.postimg.cc/QCPnVy8h/Level-2.png", "https://i.postimg.cc/25m9qvD8/level-3.png", "https://i.postimg.cc/0y1c3mrw/level-4.png", "https://i.postimg.cc/qRqLnxDm/level-5.png", "https://i.postimg.cc/V5QBxQfp/level-6.png", "https://i.postimg.cc/GmjVxzzF/level-7.png", "https://i.postimg.cc/mDPnR44P/level-8.png", "https://i.postimg.cc/C5D6B4d3/level-9.png", "https://i.postimg.cc/qMVFfW5g/level-10.png" ]; 
+
+ const flavorPool = {
+    "Push-Ups": ["Repel the steel bulkheads.", "Displace the heavy debris.", "Force through the hydraulic lock.", "Stabilize the failing frame."],
+    "Pull-Ups": ["Scale the data spires.", "Climb to the crawlspace.", "Reach the override junction.", "Escape the ventilation shaft."],
+    "Sit-Ups": ["Brace for gravity spike.", "Strengthen the kinetic core.", "Compress against pressure waves.", "Absorb the structural jolt."],
+    "Plank": ["Bypass the laser sweep.", "Endure the feedback surge.", "Lock down node integrity.", "Maintain total stealth."],
+    "Walk/Jog": ["Scout the wasteland perimeter.", "Patrol the dark zones.", "Escape the closing grid.", "Navigate the radioactive ruins."]
+ };
+
+ let systemState = { name: "User", level: 0, xp: 0, lifetime: { "Push-Ups": 0, "Pull-Ups": 0, "Sit-Ups": 0, "Plank": 0, "Walk/Jog": 0 }, avoidance: { "Push-Ups": 0, "Pull-Ups": 0, "Sit-Ups": 0, "Plank": 0, "Walk/Jog": 0 }, history: [] }; 
+
+ window.addEventListener('DOMContentLoaded', () => { 
+   const d = localStorage.getItem('ASCENSION_V2_DATA'); 
+   if(d) { systemState = JSON.parse(d); loadApp(); } else initializeFirstBoot(); 
+ }); 
+
+ function initializeFirstBoot() { document.getElementById('auth-screen').style.display = 'block'; } 
+ function goToAccountSetup() { document.getElementById('auth-screen').style.display = 'none'; document.getElementById('setup-screen').style.display = 'block'; } 
+ function finalizeAccountCreation() { systemState.name = document.getElementById('input-name').value; loadApp(); } 
+ function loadApp() { document.getElementById('auth-screen').style.display = 'none'; document.getElementById('setup-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block'; document.getElementById('display-name').innerText = systemState.name; renderQuests(); updateProfile(); renderLog(); } 
+
+ function getMaxXpForCurrentTier() { return 100 + (Math.floor(systemState.level / 10) * 33); }
+
+ function renderQuests() { 
+   let t = Math.floor(systemState.level / 10); 
+   document.getElementById('trial-tier-display').innerText = `[ TIER ${t + 1} PROTOCOL ACTIVE ]`; 
+   document.getElementById('story-banner-text').innerText = "System analyzing activity patterns. Neglected protocols now offer bonus yield.";
+   
+   let allExercises = ["Push-Ups", "Sit-Ups", "Pull-Ups", "Plank", "Walk/Jog"];
+   let active = allExercises.sort(() => 0.5 - Math.random()).slice(0, 3);
+   
+   // Track avoidance: Increment all NOT chosen
+   allExercises.forEach(ex => {
+       if (!active.includes(ex)) systemState.avoidance[ex]++;
+   });
+
+   const container = document.getElementById('quest-container'); container.innerHTML = ''; 
+   
+   active.forEach(k => { 
+     let req = 10 + (t * 5) + (k === 'Plank' ? (t*25) : 0);
+     let baseXp = 15 + (t * 5);
+     let isBonus = systemState.avoidance[k] >= 5;
+     let displayXp = isBonus ? Math.floor(baseXp * 1.5) : baseXp;
+     let flavor = flavorPool[k][Math.floor(Math.random() * flavorPool[k].length)];
+     let unit = (k === 'Plank') ? 's' : (k === 'Walk/Jog' ? 'm' : ' reps');
+     
+     container.innerHTML += `
+       <div class="trial-card">
+         <h4>${k} ${isBonus ? '<small style="color:#e62329;">(BONUS ACTIVE)</small>' : ''}</h4>
+         <div class="trial-desc">${flavor}</div>
+         <button class="btn-action" onclick="confirmQuest('${k}', ${req}, ${displayXp}, '${flavor.replace(/'/g, "\\'")}', '${unit}', ${isBonus})">Execute ${req}${unit} (+${displayXp} XP)</button>
+       </div>`; 
+   });
+   localStorage.setItem('ASCENSION_V2_DATA', JSON.stringify(systemState));
+ } 
+
+ function confirmQuest(k, amt, xp, flavor, unit, isBonus) { 
+    if(confirm(`Confirm completion of ${amt} ${k}?`)) { 
+        submitMeritRecord(k, amt, xp, flavor, unit, isBonus); 
+    } 
+ }
+
+ function submitMeritRecord(k, amt, xp, flavor, unit, isBonus) { 
+   systemState.xp += xp; 
+   systemState.lifetime[k] += amt; 
+   systemState.avoidance[k] = 0; // Reset avoidance
+   
+   let msg = `[OPERATION SUCCESSFUL]\nYou completed ${amt} ${unit} of ${k}, successfully achieving objective:\n"${flavor}"\n\nYour core physical metrics have updated!`;
+   if(isBonus) msg += "\n\nBONUS YIELD: Neglected protocol reactivation rewarded.";
+   
+   alert(msg);
+   
+   let maxXp = getMaxXpForCurrentTier();
+   if(systemState.xp >= maxXp) { systemState.level++; systemState.xp -= maxXp; alert("EVOLUTION: LEVEL UP!"); } 
+   systemState.history.unshift(`[${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}] +${amt} ${k}`); 
+   updateProfile(); renderQuests(); renderLog(); 
+ } 
+
+ function updateProfile() { 
+   let t = Math.floor(systemState.level / 10); 
+   let maxXp = getMaxXpForCurrentTier();
+   let str = 7, agi = 5, sta = 5; 
+   for(let i=1; i<=systemState.level; i++) { 
+     let mt = Math.pow(2, Math.floor(i/10)); 
+     str += 2 * mt; agi += 1 * mt; sta += 1 * mt; 
+   } 
+   document.getElementById('stat-str').innerText = str; 
+   document.getElementById('stat-agi').innerText = agi; 
+   document.getElementById('stat-sta').innerText = sta; 
+   document.getElementById('final-profile-avatar').innerHTML = `<img src="${profileTierImages[Math.min(t, 9)]}">`; 
+   document.getElementById('display-power-level').innerText = `POWER LEVEL ${systemState.level}`; 
+   document.getElementById('profile-xp-bar').style.width = `${Math.min((systemState.xp / maxXp) * 100, 100)}%`; 
+   document.getElementById('display-xp-text').innerText = `${systemState.xp} / ${maxXp} XP`;
+   localStorage.setItem('ASCENSION_V2_DATA', JSON.stringify(systemState)); 
+ } 
+
+ function renderLog() { 
+   document.getElementById('log-pushups').innerText = systemState.lifetime["Push-Ups"]; 
+   document.getElementById('log-pullups').innerText = systemState.lifetime["Pull-Ups"]; 
+   document.getElementById('log-situps').innerText = systemState.lifetime["Sit-Ups"]; 
+   document.getElementById('log-plank').innerText = systemState.lifetime["Plank"] + "s"; 
+   document.getElementById('log-cardio').innerText = systemState.lifetime["Walk/Jog"] + "m"; 
+   document.getElementById('history-container').innerHTML = systemState.history.map(h => `<div class="history-item">${h}</div>`).join(''); 
+ } 
+
+ function switchActiveTab(t, b) { 
+   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); 
+   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active')); 
+   document.getElementById('frame-' + t).classList.add('active'); b.classList.add('active'); 
+ } 
+
+ function wipeSystemData() { if(confirm("WARNING: PURGE ALL PROGRESS?")) { localStorage.removeItem('ASCENSION_V2_DATA'); location.reload(); } } 
+ </script> 
+ </body> 
+ </html>
